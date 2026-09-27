@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     # loyiha app'lari
     "accounts",
     "catalog",
+    "scheduling",
 ]
 
 MIDDLEWARE = [
