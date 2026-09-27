@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     # loyiha app'lari
     "accounts",
+    "catalog",
 ]
 
 MIDDLEWARE = [
