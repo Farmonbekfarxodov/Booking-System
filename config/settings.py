@@ -100,3 +100,8 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Appointment booking system: services, providers, availability, bookings.",
     "VERSION": "0.1.0",
 }
+
+# ---------- Booking biznes qoidalari ----------
+BOOKING_SLOT_STEP_MINUTES = int(os.getenv("BOOKING_SLOT_STEP_MINUTES", 15))   # slotlar orasidagi qadam
+BOOKING_MIN_NOTICE_MINUTES = int(os.getenv("BOOKING_MIN_NOTICE_MINUTES", 60))  # kamida shuncha oldin band qilinadi
+BOOKING_MAX_ADVANCE_DAYS = int(os.getenv("BOOKING_MAX_ADVANCE_DAYS", 60))      # eng ko'pi shuncha kun oldinga

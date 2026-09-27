@@ -1,7 +1,11 @@
+from datetime import timedelta
+
+from django.conf import settings
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 from rest_framework import serializers
 
-from catalog.models import Provider
+from catalog.models import Provider, Service
 
 from .models import TimeOff, WorkingHours
 
@@ -66,6 +70,7 @@ class TimeOffSerializer(serializers.ModelSerializer):
             with transaction.atomic():
                 # Provider qatorini qulflaymiz: shu provider uchun parallel yozuvlar navbat bilan bajariladi.
                 # Qulfsiz ikki INSERT exclusion constraint'da bir-birini kutib, "deadlock" berishi mumkin
+                # (testda aniqlangan). Qulfdan keyin ustma-ust tushishni qayta tekshiramiz.
                 Provider.objects.select_for_update().only("id").get(pk=provider.pk)
                 data = self.validated_data
                 self._check_overlap(data.get("start_at", getattr(self.instance, "start_at", None)),
@@ -80,3 +85,43 @@ class TimeOffSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         return self._save(lambda: super(TimeOffSerializer, self).update(instance, validated_data))
+
+
+class AvailabilityQuerySerializer(serializers.Serializer):
+    """GET /api/availability/ parametrlari."""
+    service = serializers.PrimaryKeyRelatedField(queryset=Service.objects.filter(is_active=True))
+    provider = serializers.PrimaryKeyRelatedField(queryset=Provider.objects.filter(is_active=True), required=False)
+    date = serializers.DateField()
+
+    def validate(self, attrs):
+        provider, service = attrs.get("provider"), attrs["service"]
+        if provider and not provider.services.filter(pk=service.pk).exists():
+            raise serializers.ValidationError({"provider": "Bu xodim tanlangan xizmatni ko'rsatmaydi."})
+        today = timezone.localdate()
+        # Provider timezone'i server timezone'idan farq qilishi mumkin, shuning uchun 1 kun zaxira qoldiramiz
+        if attrs["date"] < today - timedelta(days=1):
+            raise serializers.ValidationError({"date": "O'tgan sana uchun bo'sh vaqt yo'q."})
+        if attrs["date"] > today + timedelta(days=settings.BOOKING_MAX_ADVANCE_DAYS):
+            raise serializers.ValidationError(
+                {"date": f"Eng ko'pi {settings.BOOKING_MAX_ADVANCE_DAYS} kun oldinga band qilish mumkin."})
+        return attrs
+
+
+# ---- Javob sxemasi (Swagger hujjati uchun) ----
+class SlotSerializer(serializers.Serializer):
+    start = serializers.DateTimeField()
+    end = serializers.DateTimeField()
+
+
+class ProviderSlotsSerializer(serializers.Serializer):
+    provider_id = serializers.IntegerField()
+    provider_name = serializers.CharField()
+    timezone = serializers.CharField()
+    slots = SlotSerializer(many=True)
+
+
+class AvailabilityResponseSerializer(serializers.Serializer):
+    service_id = serializers.IntegerField()
+    date = serializers.DateField()
+    duration_minutes = serializers.IntegerField()
+    providers = ProviderSlotsSerializer(many=True)
