@@ -71,12 +71,13 @@ def working_windows(provider: Provider, day: date) -> list[Interval]:
 
 
 def busy_intervals(provider: Provider, span: Interval) -> list[Interval]:
-    """Shu oraliqda provider band bo'lgan vaqtlar.
+    """Shu oraliqda provider band bo'lgan vaqtlar: dam olish + faol (pending/confirmed) bookinglar."""
+    from bookings.models import Booking   # aylanma importning oldini olish uchun
 
-    Hozircha faqat dam olish. 6-bosqichda faol bookinglar ham shu yerga qo'shiladi.
-    """
     offs = TimeOff.objects.filter(provider=provider, start_at__lt=span.end, end_at__gt=span.start)
-    return [Interval(o.start_at, o.end_at) for o in offs]
+    books = Booking.objects.filter(provider=provider, status__in=Booking.ACTIVE_STATUSES,
+                                   start_at__lt=span.end, end_at__gt=span.start)
+    return [Interval(o.start_at, o.end_at) for o in offs] + [Interval(b.start_at, b.end_at) for b in books]
 
 
 def get_available_slots(provider: Provider, service: Service, day: date, now: datetime | None = None) -> list[Interval]:

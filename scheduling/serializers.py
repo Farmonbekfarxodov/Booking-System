@@ -54,7 +54,6 @@ class TimeOffSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"end_at": "Tugash vaqti boshlanishdan keyin bo'lishi kerak."})
         # Tezkor tekshiruv (qulfsiz). Parallel so'rovlar uchun _save() ichida qulf bilan qayta tekshiriladi.
         self._check_overlap(start, end)
-        # TODO (6-bosqich): shu oraliqda faol booking bo'lsa, rad etish
         return attrs
 
     def _check_overlap(self, start, end):
@@ -63,6 +62,12 @@ class TimeOffSerializer(serializers.ModelSerializer):
             qs = qs.exclude(pk=self.instance.pk)
         if qs.exists():
             raise serializers.ValidationError(OVERLAP_MSG)
+        from bookings.models import Booking
+        if Booking.objects.filter(provider=self.context["provider"], status__in=Booking.ACTIVE_STATUSES,
+                                  start_at__lt=end, end_at__gt=start).exists():
+            # Mijozga va'da qilingan vaqtni jimgina bekor qilib bo'lmaydi: avval bookinglarni hal qilish kerak
+            raise serializers.ValidationError(
+                "Bu oraliqda faol bookinglar bor. Avval ularni bekor qiling yoki boshqa vaqtga o'tkazing.")
 
     def _save(self, fn):
         provider = self.context["provider"]
