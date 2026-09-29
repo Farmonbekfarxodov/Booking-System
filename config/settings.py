@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-insecure-key")
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-only-insecure-key-set-DJANGO_SECRET_KEY-in-production")
 DEBUG = os.getenv("DJANGO_DEBUG", "0") == "1"
 ALLOWED_HOSTS = [h for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h]
 # Render o'z domenini shu o'zgaruvchida beradi (masalan booking-api.onrender.com)

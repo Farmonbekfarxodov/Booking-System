@@ -40,6 +40,7 @@ erDiagram
 
 | Decision | Why |
 |---|---|
+| **Django 5.2 LTS + Python 3.13** | Long-term support release (security fixes until April 2028) instead of the newest feature release — stability matters more than new features for a booking system. |
 | **PostgreSQL**, not SQLite | Needed for `EXCLUDE USING gist` constraints on time ranges and for row-level locks. |
 | **Custom `User` with `role`** from day one | Django cannot switch the user model cleanly later. Roles drive every permission check. |
 | **`Booking.end_at` is stored** | If a service's duration changes later, existing bookings keep their real length. |

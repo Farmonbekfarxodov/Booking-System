@@ -4,7 +4,7 @@ Appointment booking backend for a small service business (barbershop, clinic, be
 Customers pick a service, see free time slots and book; the business manages services, staff,
 working hours and bookings.
 
-**Stack:** Python 3.12 · Django 5.1 · Django REST Framework · PostgreSQL 16 · JWT · Docker · pytest
+**Stack:** Python 3.13 · Django 5.2 LTS · Django REST Framework 3.18 · PostgreSQL 16 · JWT · Docker · pytest
 
 **Highlights**
 
@@ -76,7 +76,7 @@ On every start the container runs migrations, loads demo data (`SEED_DEMO=1`) an
 Static files are served by WhiteNoise. Free-tier notes: the service sleeps after inactivity
 (first request takes ~1 min) and the free database expires after 30 days.
 
-Live demo: _add your Render URL here_ → `/api/docs/`
+**Live demo:** https://booking-system-l2bn.onrender.com/api/docs/ (demo accounts above; first request may take ~1 min while the free instance wakes up)
 
 ---
 
