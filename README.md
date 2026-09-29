@@ -34,6 +34,16 @@ docker compose exec web python manage.py createsuperuser
 | http://localhost:8000/admin/ | Django admin |
 | http://localhost:8000/api/health/ | Health check |
 
+Load demo data (services, 2 staff members with schedules, customers, sample bookings):
+
+```bash
+docker compose exec web python manage.py seed_demo
+```
+
+Demo accounts (password: `Demo-pass-123`, or `DEMO_PASSWORD` from `.env`):
+`admin` (business admin) · `usta_ali`, `usta_vali` (staff) · `mijoz`, `mijoz2` (customers).
+With `SEED_DEMO=1` the data is created automatically on container start (idempotent).
+
 Run the tests:
 
 ```bash
@@ -51,6 +61,22 @@ docker compose exec web pytest -q
 | `BOOKING_MIN_NOTICE_MINUTES` | 60 | A slot must start at least this far in the future |
 | `BOOKING_MAX_ADVANCE_DAYS` | 60 | How far ahead customers can book |
 | `BOOKING_CANCEL_DEADLINE_HOURS` | 2 | Customers cannot cancel later than this before start |
+
+---
+
+## Deploy (Render, free tier)
+
+The repo contains a [`render.yaml`](render.yaml) blueprint: a Docker web service + a free PostgreSQL database.
+
+1. Push the repo to GitHub.
+2. Render dashboard → **New → Blueprint** → select the repo → **Apply**.
+3. Enter a value for `DEMO_PASSWORD` when asked.
+
+On every start the container runs migrations, loads demo data (`SEED_DEMO=1`) and starts gunicorn on `$PORT`.
+Static files are served by WhiteNoise. Free-tier notes: the service sleeps after inactivity
+(first request takes ~1 min) and the free database expires after 30 days.
+
+Live demo: _add your Render URL here_ → `/api/docs/`
 
 ---
 
