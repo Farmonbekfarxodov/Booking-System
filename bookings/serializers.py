@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from catalog.models import Provider, Service
 
-from .models import Booking
+from .models import Booking, BookingEvent
 
 
 class BookingCreateSerializer(serializers.Serializer):
@@ -37,3 +37,23 @@ class BookingSerializer(serializers.ModelSerializer):
 
     def get_end_local(self, obj) -> str:
         return self._local(obj, obj.end_at)
+
+
+class BookingEventSerializer(serializers.ModelSerializer):
+    actor = serializers.CharField(source="actor.username", default=None, read_only=True)
+
+    class Meta:
+        model = BookingEvent
+        fields = ["from_status", "to_status", "actor", "note", "created_at"]
+
+
+class BookingDetailSerializer(BookingSerializer):
+    events = BookingEventSerializer(many=True, read_only=True)
+
+    class Meta(BookingSerializer.Meta):
+        fields = BookingSerializer.Meta.fields + ["events"]
+        read_only_fields = fields
+
+
+class CancelSerializer(serializers.Serializer):
+    reason = serializers.CharField(max_length=300, required=False, allow_blank=True)

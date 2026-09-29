@@ -62,9 +62,37 @@ class Booking(models.Model):
             ),
         ]
 
+    # Ruxsat etilgan status o'tishlari (state machine). Boshqa har qanday o'tish taqiqlangan.
+    TRANSITIONS = {
+        Status.PENDING: {Status.CONFIRMED, Status.CANCELLED},
+        Status.CONFIRMED: {Status.COMPLETED, Status.CANCELLED},
+        Status.CANCELLED: set(),      # yakuniy holat
+        Status.COMPLETED: set(),      # yakuniy holat
+    }
+
+    def can_transition_to(self, new_status) -> bool:
+        return new_status in self.TRANSITIONS[self.status]
+
     @property
     def is_active(self) -> bool:
         return self.status in self.ACTIVE_STATUSES
 
     def __str__(self):
         return f"#{self.pk} {self.service} @ {self.start_at:%Y-%m-%d %H:%M} ({self.status})"
+
+
+class BookingEvent(models.Model):
+    """Booking tarixi (audit log): kim, qachon, qaysi statusdan qaysisiga o'tkazdi."""
+
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name="events")
+    from_status = models.CharField(max_length=10, choices=Booking.Status.choices, blank=True)
+    to_status = models.CharField(max_length=10, choices=Booking.Status.choices)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="+")
+    note = models.CharField(max_length=300, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at", "id"]
+
+    def __str__(self):
+        return f"#{self.booking_id}: {self.from_status or '-'} -> {self.to_status}"

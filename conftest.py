@@ -29,13 +29,17 @@ def customer(make_user):
     return make_user("mijoz")
 
 
+# Har bir rol uchun ALOHIDA client: bitta testda bir nechtasi ishlatilsa, bir-birining
+# autentifikatsiyasini ustidan yozib yubormaydi.
 @pytest.fixture
-def admin_api(api, admin_user):
-    api.force_authenticate(admin_user)
-    return api
+def admin_api(admin_user):
+    c = APIClient()
+    c.force_authenticate(admin_user)
+    return c
 
 
 @pytest.fixture
-def customer_api(api, customer):
-    api.force_authenticate(customer)
-    return api
+def customer_api(customer):
+    c = APIClient()
+    c.force_authenticate(customer)
+    return c
